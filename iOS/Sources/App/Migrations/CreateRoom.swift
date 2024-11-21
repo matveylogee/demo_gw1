@@ -14,6 +14,9 @@ struct CreateRoom: Migration {
             .field("inviteCode", .string, .required)
             .field("isPrivate", .bool, .required)
             .field("adminId", .uuid, .required, .references("users", "id"))
+            .field("participations", .array(of: .uuid), .required)
+            .field("isStart", .bool, .required)
+            .field("isPause", .bool, .required)
             .create()
     }
 

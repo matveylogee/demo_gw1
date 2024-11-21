@@ -12,17 +12,19 @@ func routes(_ app: Application) throws {
     // Группа маршрутов для игровых комнат
     let roomController = RoomController()
     app.group("rooms") { rooms in
-        rooms.post("create", use: roomController.createRoom)
-        rooms.post("join", use: roomController.joinRoom)
-        rooms.post("join-private", use: roomController.joinPrivateRoom)
-        
-        // Защищенные маршруты (требуют авторизации)
         let protected = rooms.grouped(JWTMiddleware())
-        protected.post(":roomID/kick", use: roomController.kickPlayer)
-        protected.post(":roomID/start", use: roomController.startGame)
-        protected.post(":roomID/pause", use: roomController.pauseGame)
-        protected.post(":roomID/close", use: roomController.closeRoom)
-        protected.get(":roomID/status", use: roomController.roomStatus)
+        protected.post("create", use: roomController.createRoom)
+        protected.post("join", use: roomController.joinRoom)
+        protected.post("join-private", use: roomController.joinPrivateRoom)
+        
+        
+        protected.group(":roomID") { room in
+            room.post("kick", use: roomController.kickPlayer)
+            room.post("start", use: roomController.startGame)
+            room.post("pause", use: roomController.pauseGame)
+            room.post("close", use: roomController.closeRoom)
+            room.get("status", use: roomController.roomStatus)
+        }
     }
 
     // Группа маршрутов для игровой логики

@@ -23,12 +23,24 @@ final class Room: Model, Content {
     @Parent(key: "adminId")
     var admin: User
     
+    @Field(key: "participations")
+    var participations: [UUID]
+    
+    @Field(key: "isStart")
+    var isStart: Bool
+    
+    @Field(key: "isPause")
+    var isPause: Bool
+    
     init() {}
 
-    init(id: UUID? = nil, inviteCode: String, isPrivate: Bool, adminID: UUID) {
+    init(id: UUID? = nil, inviteCode: String, isPrivate: Bool, adminID: UUID, participations: [UUID] = [], isStart: Bool = false, isPause: Bool = false) {
         self.id = id
         self.inviteCode = inviteCode
         self.isPrivate = isPrivate
         self.$admin.id = adminID
+        self.participations = participations
+        self.isStart = isStart
+        self.isPause = isPause
     }
 }
