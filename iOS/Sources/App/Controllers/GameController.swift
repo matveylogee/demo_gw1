@@ -85,11 +85,12 @@ struct GameController: RouteCollection {
 
                         
                         game.boardStatus = updatedBoard
-                        game.save(on: req.db).flatMap {
+                        return game.save(on: req.db).flatMap {
                             saveLeaderboard(req: req, roomId: roomID, leaderboardId: leaderboardId, nickname: game.currentTurnUser.nickname, points: points)
+                            return req.eventLoop.makeSucceededFuture(.ok)
                         }
                         
-                        return req.eventLoop.makeSucceededFuture(.ok)
+                        
                     }
             }
     }
