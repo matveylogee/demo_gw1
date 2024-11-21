@@ -2,6 +2,7 @@ import Fluent
 import Vapor
 
 func routes(_ app: Application) throws {
+    return
     // Группа маршрутов для пользователей
     let userController = UserController()
     app.group("users") { users in

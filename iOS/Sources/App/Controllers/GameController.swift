@@ -26,6 +26,10 @@ struct GameController: RouteCollection {
                 guard let currentGameId = room.currentGameId else {
                     return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "No current game found for this room"))
                 }
+                
+                guard let leaderboardId = room.leaderboardId else {
+                    return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "No leaderboard found for this room"))
+                }
 
                 // Find the current game using the currentGameId from the room
                 return Game.find(currentGameId, on: req.db)
@@ -53,13 +57,25 @@ struct GameController: RouteCollection {
                             } else {
                                 return req.eventLoop.makeFailedFuture(Abort(.badRequest, reason: "Invalid word"))
                             }
+                            if playRequest.isHorizontal {
+                                x += 1
+                            } else {
+                                y += 1
+                            }
                         }
                         
                         //TODO: check other words that can be created
+                        let points = evaluateMove(word: playRequest.word, board: board)
                         
                         for letter in playRequest.word {
                             _ = board.placeLetter(at: y, col: x, letter: letter.uppercased())
+                            if playRequest.isHorizontal {
+                                x += 1
+                            } else {
+                                y += 1
+                            }
                         }
+                        
                         do {
                             updatedBoard = try board.toJSON()
                         } catch {
@@ -69,13 +85,13 @@ struct GameController: RouteCollection {
 
                         
                         game.boardStatus = updatedBoard
-                        
-                        return game.save(on: req.db).map {
-                            .ok
+                        game.save(on: req.db).flatMap {
+                            saveLeaderboard(req: req, roomId: roomID, leaderboardId: leaderboardId, nickname: game.currentTurnUser.nickname, points: points)
                         }
+                        
+                        return req.eventLoop.makeSucceededFuture(.ok)
                     }
             }
-     
     }
     
     // Валидация слова (простая заглушка, можно подключить словарь)
@@ -85,9 +101,26 @@ struct GameController: RouteCollection {
         return word.count >= 2
     }
     
-    private func evaluateMove() {
-        
+    private func evaluateMove(word: String, board: Board) -> Int {
+        // заглушка
+        return word.count
     }
+    
+    private func saveLeaderboard(req: Request, roomId: UUID, leaderboardId: UUID, nickname: String, points: Int) -> EventLoopFuture<Void> {
+        return Leaderboard.find(leaderboardId, on: req.db)
+            .flatMap { optionalLeaderboard in
+                if let leaderboard = optionalLeaderboard {
+                    // Update existing leaderboard
+                    leaderboard.points += points
+                    return leaderboard.save(on: req.db)
+                } else {
+                    // Create new leaderboard
+                    let newLeaderboard = Leaderboard(roomId: roomId, nickname: nickname, points: points)
+                    return newLeaderboard.save(on: req.db)
+                }
+            }
+    }
+
 }
 
 // Запросы для маршрутов
@@ -119,7 +152,8 @@ struct Board: Codable {
     }
 }
 
-extension Board {
+extension Board { //TODO: make encoder and decoder static
+    
     func toJSON() throws -> String {
             let encoder = JSONEncoder()
             let jsonData = try encoder.encode(self)

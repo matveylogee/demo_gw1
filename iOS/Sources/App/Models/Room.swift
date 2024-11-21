@@ -26,6 +26,9 @@ final class Room: Model, Content {
     @OptionalField(key: "currentGameId")
     var currentGameId: UUID?
     
+    @OptionalField(key: "leaderboardId")
+    var leaderboardId: UUID?
+    
     init() {}
 
     init(id: UUID? = nil, inviteCode: String, isPrivate: Bool, adminID: UUID) {
