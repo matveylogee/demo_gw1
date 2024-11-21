@@ -29,6 +29,7 @@ public func configure(_ app: Application) async throws {
     app.migrations.add(CreateUser())
     app.migrations.add(CreateRoom())
     app.migrations.add(CreateLeaderboard())
+    app.migrations.add(CreateGame())
 
     try app.autoMigrate().wait()
 }

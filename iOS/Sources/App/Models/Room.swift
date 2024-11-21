@@ -23,6 +23,9 @@ final class Room: Model, Content {
     @Parent(key: "adminId")
     var admin: User
     
+    @OptionalField(key: "currentGameId")
+    var currentGameId: UUID?
+    
     init() {}
 
     init(id: UUID? = nil, inviteCode: String, isPrivate: Bool, adminID: UUID) {

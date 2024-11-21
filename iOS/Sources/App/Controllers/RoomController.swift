@@ -63,11 +63,17 @@ struct RoomController: RouteCollection {
         return Room.find(roomID, on: req.db)
             .unwrap(or: Abort(.notFound, reason: "Room not found"))
             .flatMap { room in
-                guard room.$admin.id == user.id else {
-                    throw Abort(.forbidden, reason: "Only the admin can kick players")
+                do {
+                    guard room.$admin.id == user.id else {
+                        throw Abort(.forbidden, reason: "Only the admin can kick players")
+                    }
+                    
+                    // Логика удаления игрока
+                    return req.eventLoop.makeSucceededFuture(.ok)
+                } catch {
+                    //MARK: TODO error handling
+                    return req.eventLoop.makeFailedFuture(Abort(.badRequest, reason: ""))
                 }
-                // Логика удаления игрока
-                req.eventLoop.makeSucceededFuture(.ok)
             }
     }
 
@@ -75,6 +81,16 @@ struct RoomController: RouteCollection {
     func startGame(req: Request) throws -> EventLoopFuture<HTTPStatus> {
         let roomID = try req.parameters.require("roomID", as: UUID.self)
         // Логика запуска раунда
+        //MARK: TODO - create game
+        
+        // {
+        //  board: [
+        //      [' ', ' ', ' ', ... ' '],
+        //      ...
+        //      
+        //  ]
+        // }
+        
         return req.eventLoop.makeSucceededFuture(.ok)
     }
 
@@ -102,12 +118,17 @@ struct RoomController: RouteCollection {
             .unwrap(or: Abort(.notFound, reason: "Room not found"))
             .flatMap { room in
                 // Здесь возвращаем информацию о комнате
-                req.eventLoop.makeSucceededFuture(RoomStatusResponse(
-                    roomID: try room.requireID(),
-                    leaderboard: [],
-                    tilesLeft: 100,
-                    currentWords: []
-                ))
+                do {
+                    return req.eventLoop.makeSucceededFuture(RoomStatusResponse(
+                        roomID: try room.requireID(),
+                        leaderboard: [],
+                        tilesLeft: 100,
+                        currentWords: []
+                    ))
+                } catch {
+                    //MARK: TODO error handling
+                    return req.eventLoop.makeFailedFuture(Abort(.badRequest, reason: ""))
+                }
             }
     }
 }
